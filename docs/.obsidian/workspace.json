@@ -1,0 +1,216 @@
+{
+  "main": {
+    "id": "9ad4edf6b6c37ddf",
+    "type": "split",
+    "children": [
+      {
+        "id": "ab8a76c23424947d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "14ea28a33482204f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "BRAIN_SIMPLE.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "BRAIN_SIMPLE"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "c98f17eb72a3076a",
+    "type": "split",
+    "children": [
+      {
+        "id": "c5e293e2b38b566a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0ea6e19443739af1",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "파일 탐색기"
+            }
+          },
+          {
+            "id": "35dcd6c43635dc32",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "검색"
+            }
+          },
+          {
+            "id": "0968cbec597f9006",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "북마크"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "d1d85aaff1cb9f24",
+    "type": "split",
+    "children": [
+      {
+        "id": "195a018e102dfecf",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "65da893b6018bb82",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "BRAIN_SIMPLE.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "BRAIN_SIMPLE 의 백링크"
+            }
+          },
+          {
+            "id": "e5c366505464912d",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "BRAIN_SIMPLE.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "BRAIN_SIMPLE 의 나가는 링크"
+            }
+          },
+          {
+            "id": "e09c27713f7e5f00",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "태그"
+            }
+          },
+          {
+            "id": "c98880a61f235985",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "모든 속성"
+            }
+          },
+          {
+            "id": "086784a3f3ed5519",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "BRAIN_SIMPLE.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "BRAIN_SIMPLE 의 개요"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:빠른 전환기 열기": false,
+      "graph:그래프 뷰 열기": false,
+      "canvas:새 캔버스 만들기": false,
+      "daily-notes:오늘의 일일 노트 열기": false,
+      "templates:템플릿 삽입": false,
+      "command-palette:명령어 팔레트 열기": false,
+      "bases:새 베이스 생성하기": false
+    }
+  },
+  "active": "14ea28a33482204f",
+  "lastOpenFiles": [
+    "KIS_INTEGRATION.md",
+    "DATABASE_DESIGN.md",
+    "DATA_INTEGRITY_RULES.md",
+    "DATA_FLOW.md",
+    "SCHEDULER_DESIGN.md",
+    "dev/26-KIS-WEBSOCKET-SETUP.md",
+    "dev/25-STRATEGY-INTEGRATION.md",
+    "dev/24-KOREAN-TRAP-SYSTEM-COMPLETION.md",
+    "DEVELOPMENT_PLAN.md",
+    "EXTERNAL_DATA_SOURCES.md",
+    "IMPROVEMENT_PLAN.md",
+    "MICRO_OPTIMIZATION.md",
+    "PYRAMIDING_STRATEGY.md",
+    "TRADING_TECHNIQUES.md",
+    "SAFETY_SYSTEM.md",
+    "BACKTESTER_SIMPLE.md",
+    "클로드_토큰절약.md",
+    "dev/23-KOREAN-MARKET-DATA-INTEGRATION.md",
+    "dev/22-KOREAN-MARKET-TRAPS.md",
+    "dev/21-PARTIAL-SELL.md",
+    "dev/20-SAFETY-CHECKER.md",
+    "dev/19-AI-MODELS-SPECIFICATION.md",
+    "dev/17-IMMEDIATE-EXECUTION-FLOW.md",
+    "dev/16-EVENT-DRIVEN-FETCHER.md",
+    "dev/15-PROGRESS-SUMMARY.md",
+    "dev/14-PHASE4-BRAIN-INTEGRATION.md",
+    "dev"
+  ]
+}
