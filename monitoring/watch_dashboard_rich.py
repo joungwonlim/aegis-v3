@@ -506,8 +506,9 @@ class RichWatchDashboard:
             table.add_column("수량", justify="right", width=8)
             table.add_column("평단가", justify="right", width=10)
             table.add_column("현재가", justify="right", width=10)
+            table.add_column("평가금액", justify="right", width=12)
             table.add_column("손익률", justify="right", width=10)
-            table.add_column("수익률 그래프", width=40)
+            table.add_column("수익률 그래프", width=30)
 
             # Calculate totals
             total_value = 0
@@ -525,12 +526,15 @@ class RichWatchDashboard:
                 else:
                     icon = "📉"
 
+                # Calculate valuation
+                valuation = pos.quantity * pos.current_price
+
                 # Profit rate color
                 pnl_color = "green" if pos.unrealized_pnl_pct >= 0 else "red"
                 pnl_text = f"[{pnl_color}]{pos.unrealized_pnl_pct:+.2f}%[/{pnl_color}]"
 
                 # Create bar chart for profit rate
-                bar_width = 30
+                bar_width = 20
                 abs_pct = abs(pos.unrealized_pnl_pct)
                 bar_len = min(bar_width, int(abs_pct / 10 * bar_width))  # Scale: 10% = full bar
 
@@ -544,6 +548,7 @@ class RichWatchDashboard:
                     f"{pos.quantity:,}",
                     f"{pos.avg_price:,.0f}",
                     f"{pos.current_price:,.0f}",
+                    f"₩{valuation:,.0f}",
                     pnl_text,
                     bar_graph
                 )
@@ -555,7 +560,7 @@ class RichWatchDashboard:
                 total_pnl_weighted += pos.unrealized_pnl_pct * position_value
 
             # Add separator and average row
-            table.add_row("─" * 12, "─" * 8, "─" * 10, "─" * 10, "─" * 10, "─" * 40)
+            table.add_row("─" * 12, "─" * 8, "─" * 10, "─" * 10, "─" * 12, "─" * 10, "─" * 30)
 
             # Calculate weighted average profit rate
             avg_pnl_pct = (total_pnl_weighted / total_value) if total_value > 0 else 0
@@ -563,7 +568,7 @@ class RichWatchDashboard:
             avg_pnl_text = f"[{avg_pnl_color}]{avg_pnl_pct:+.2f}%[/{avg_pnl_color}]"
 
             # Average bar graph
-            avg_bar_width = 30
+            avg_bar_width = 20
             avg_abs_pct = abs(avg_pnl_pct)
             avg_bar_len = min(avg_bar_width, int(avg_abs_pct / 10 * avg_bar_width))
 
@@ -573,8 +578,9 @@ class RichWatchDashboard:
                 avg_bar_graph = f"[red]{'█' * avg_bar_len}[/red] {avg_pnl_pct:+.2f}%"
 
             table.add_row(
-                "[bold cyan]📊 평균[/bold cyan]",
+                "[bold cyan]📊 합계[/bold cyan]",
                 f"[bold]{len(position_risks)}개[/bold]",
+                "-",
                 "-",
                 f"[bold]₩{total_value:,.0f}[/bold]",
                 f"[bold]{avg_pnl_text}[/bold]",
@@ -729,32 +735,59 @@ class RichWatchDashboard:
     def _render_schedule_and_processes(self):
         """앞으로 실행될 스케줄 + 실행중인 프로세스"""
         # Schedule Table
-        schedule_table = Table(title="⏰ UPCOMING SCHEDULE", box=box.SIMPLE, border_style="magenta", width=60)
-        schedule_table.add_column("시간", style="cyan")
-        schedule_table.add_column("작업", style="yellow")
-        schedule_table.add_column("설명")
+        schedule_table = Table(title="⏰ UPCOMING SCHEDULE", box=box.SIMPLE, border_style="magenta", width=80)
+        schedule_table.add_column("시간", style="cyan", width=12)
+        schedule_table.add_column("주기", style="yellow", width=10)
+        schedule_table.add_column("작업", style="yellow", width=20)
+        schedule_table.add_column("설명", width=35)
 
-        # Define schedule
+        # Define schedule (ordered by time)
         schedule = [
-            ("07:00", "KRX 데이터", "수급 데이터 수집"),
-            ("07:20", "Brain 분석", "DeepSeek-R1 심층 분석"),
-            ("08:00", "Opus 브리핑", "Claude Opus 오늘 전략"),
-            ("09:00", "장 시작", "자동매매 시작 (30초 주기)"),
-            ("15:30", "장 마감", "일일 정산 및 피드백"),
+            ("07:00", "1회", "KRX 데이터", "수급 데이터 수집"),
+            ("07:20", "1회", "Brain 분석", "DeepSeek-R1 심층 분석"),
+            ("08:00", "1회", "Opus 브리핑", "Claude Opus 오늘 전략"),
+            ("09:00", "1회", "장 시작", "WebSocket 구독 & 거래 시작"),
+            ("09:00-15:30", "30초", "자동매매", "포트폴리오 체크 → 매수/매도"),
+            ("09:00-15:30", "1분", "🛡️ 계좌 동기화", "KIS API → DB 강제 동기화"),
+            ("09:00-15:30", "5분", "미체결 확인", "미체결 주문 상태 동기화"),
+            ("장중", "실시간", "WebSocket", "체결 알림 & 실시간 시세"),
+            ("재연결 시", "이벤트", "🚨 비상 동기화", "WebSocket 재연결 → DB 동기화"),
+            ("15:30", "1회", "장 마감", "일일 정산 및 피드백"),
         ]
 
         current_time = datetime.now().time()
-        for time_str, task, desc in schedule:
-            task_time = datetime.strptime(time_str, "%H:%M").time()
+        market_start = datetime.strptime("09:00", "%H:%M").time()
+        market_end = datetime.strptime("15:30", "%H:%M").time()
+        is_market_hours = market_start <= current_time <= market_end
 
-            # Highlight upcoming tasks
-            if task_time > current_time:
-                style = "bold green"
+        for time_str, interval, task, desc in schedule:
+            # Determine style based on current time and market hours
+            if "09:00-15:30" in time_str:
+                # Market hours tasks
+                if is_market_hours:
+                    style = "bold green"  # Currently active
+                else:
+                    style = "dim"  # Not active yet
+            elif "장중" in time_str or "재연결" in time_str:
+                # Event-driven tasks
+                if is_market_hours:
+                    style = "bold cyan"
+                else:
+                    style = "dim"
             else:
-                style = "dim"
+                # Time-based tasks
+                try:
+                    task_time = datetime.strptime(time_str, "%H:%M").time()
+                    if task_time > current_time:
+                        style = "bold yellow"  # Upcoming
+                    else:
+                        style = "dim"  # Already passed
+                except:
+                    style = "dim"
 
             schedule_table.add_row(
                 f"[{style}]{time_str}[/{style}]",
+                f"[{style}]{interval}[/{style}]",
                 f"[{style}]{task}[/{style}]",
                 f"[{style}]{desc}[/{style}]"
             )
