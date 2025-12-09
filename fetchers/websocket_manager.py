@@ -395,7 +395,14 @@ class KISWebSocketManager:
             logger.error(f"❌ Message handling failed: {e}")
 
     async def reconnect(self):
-        """WebSocket 재연결"""
+        """
+        🚨 WebSocket 재연결 (비상 동기화 포함)
+
+        재연결 시 3단계 전략:
+        1. WebSocket 재연결
+        2. 🚨 REST API로 계좌 강제 동기화 (패킷 유실 복구)
+        3. 기존 구독 전체 재구독
+        """
         logger.info("🔄 Reconnecting WebSocket...")
 
         try:
@@ -406,6 +413,14 @@ class KISWebSocketManager:
                 logger.error("❌ Reconnection failed")
                 await asyncio.sleep(10)
                 return
+
+            # 🚨 비상 동기화: REST API로 계좌 즉시 동기화
+            logger.info("🚨 Emergency sync: Synchronizing account after reconnect...")
+            try:
+                await kis_fetcher.sync_portfolio()
+                logger.info("✅ Emergency sync completed")
+            except Exception as sync_error:
+                logger.error(f"❌ Emergency sync failed: {sync_error}")
 
             # 기존 구독 전체 재구독
             await self.resubscribe_all()

@@ -185,6 +185,7 @@
   },
   "active": "14ea28a33482204f",
   "lastOpenFiles": [
+    "HYBRID_SYNC_STRATEGY.md",
     "KIS_INTEGRATION.md",
     "DATABASE_DESIGN.md",
     "DATA_INTEGRITY_RULES.md",
@@ -210,7 +211,6 @@
     "dev/17-IMMEDIATE-EXECUTION-FLOW.md",
     "dev/16-EVENT-DRIVEN-FETCHER.md",
     "dev/15-PROGRESS-SUMMARY.md",
-    "dev/14-PHASE4-BRAIN-INTEGRATION.md",
     "dev"
   ]
 }
