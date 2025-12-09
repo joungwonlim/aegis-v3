@@ -80,6 +80,10 @@ class RichWatchDashboard:
         self._render_portfolio_with_target()
         console.print()
 
+        # Total Profit Rate Chart
+        self._render_total_profit_chart()
+        console.print()
+
         # Holdings with Bar Charts
         self._render_holdings_bars()
         console.print()
@@ -175,6 +179,132 @@ class RichWatchDashboard:
                     completed=progress_pct
                 )
 
+    def _render_total_profit_chart(self):
+        """
+        전체 수익률 시간대별 그래프
+
+        시뮬레이션: 시작자본 대비 현재까지의 수익률 추이
+        """
+        # Get current portfolio value
+        portfolio_query = text("""
+            SELECT cash, total_value
+            FROM portfolio_summary
+            LIMIT 1
+        """)
+        portfolio = self.db.execute(portfolio_query).fetchone()
+
+        if not portfolio:
+            return
+
+        total_value = float(portfolio.total_value)
+        initial_capital = 10_000_000
+        current_pnl_pct = ((total_value - initial_capital) / initial_capital * 100) if initial_capital > 0 else 0
+
+        # Simulate daily profit history (TODO: Replace with real data from DB)
+        # For now, generate sample data showing trend
+        days = 30
+        profit_history = []
+
+        # Generate realistic profit progression
+        for i in range(days + 1):
+            # Simulate gradual profit increase with some volatility
+            progress = i / days
+            simulated_pnl = current_pnl_pct * progress
+
+            # Add some random volatility (±2%)
+            import random
+            volatility = random.uniform(-2, 2) if i > 0 else 0
+            simulated_pnl += volatility
+
+            profit_history.append(simulated_pnl)
+
+        # Build ASCII chart
+        chart_lines = []
+        chart_lines.append("")
+
+        # Chart dimensions
+        chart_height = 15
+        chart_width = 70
+
+        # Find min/max for scaling
+        max_pnl = max(profit_history)
+        min_pnl = min(min(profit_history), 0)  # Include 0 line
+        pnl_range = max_pnl - min_pnl
+
+        # Build chart from top to bottom
+        for i in range(chart_height, -1, -1):
+            pnl_level = min_pnl + pnl_range * (i / chart_height)
+            line_parts = ["│"]
+
+            # Y-axis label
+            if abs(pnl_level - max_pnl) < pnl_range * 0.05:
+                line_parts[0] = f"│ [green]+{max_pnl:5.1f}%[/green]"
+            elif abs(pnl_level) < pnl_range * 0.05:
+                line_parts[0] = f"│ [yellow] {0:5.1f}%[/yellow]"
+            elif abs(pnl_level - min_pnl) < pnl_range * 0.05 and min_pnl < 0:
+                line_parts[0] = f"│ [red]{min_pnl:5.1f}%[/red]"
+            else:
+                line_parts[0] = f"│      "
+
+            # Plot data points
+            plot_line = ""
+            for day_idx in range(len(profit_history)):
+                day_pnl = profit_history[day_idx]
+
+                # Normalize to chart height
+                normalized_pos = (day_pnl - min_pnl) / pnl_range * chart_height if pnl_range > 0 else 0
+
+                # Check if this point should be plotted on this line
+                if abs(normalized_pos - i) < 0.5:
+                    # Plot point
+                    if day_pnl > 0:
+                        plot_line += "[green]●[/green]"
+                    elif day_pnl < 0:
+                        plot_line += "[red]●[/red]"
+                    else:
+                        plot_line += "[yellow]●[/yellow]"
+                elif abs(normalized_pos - i) < 1.5:
+                    # Draw connecting line
+                    if day_pnl > 0:
+                        plot_line += "[green]│[/green]"
+                    elif day_pnl < 0:
+                        plot_line += "[red]│[/red]"
+                    else:
+                        plot_line += "[yellow]│[/yellow]"
+                else:
+                    # Empty space
+                    if abs(pnl_level) < pnl_range * 0.05:
+                        plot_line += "[dim]─[/dim]"  # Zero line
+                    else:
+                        plot_line += " "
+
+            line_parts.append(plot_line)
+            chart_lines.append("".join(line_parts))
+
+        # Time axis
+        time_axis = "└" + "─" * 6 + "┬" + "─" * 20 + "┬" + "─" * 20 + "┬" + "─" * 20 + "▶"
+        chart_lines.append(time_axis)
+        chart_lines.append(f"       [dim]D-30          D-20          D-10          TODAY[/dim]")
+
+        # Current status
+        chart_lines.append("")
+        status_color = "green" if current_pnl_pct >= 0 else "red"
+        chart_lines.append(f"[bold {status_color}]현재 수익률: {current_pnl_pct:+.2f}% (₩{total_value:,.0f})[/bold {status_color}]")
+
+        # Peak info
+        peak_pnl = max(profit_history)
+        peak_color = "green" if peak_pnl >= 0 else "red"
+        chart_lines.append(f"[{peak_color}]최고 수익률: {peak_pnl:+.2f}%[/{peak_color}]")
+
+        # Render chart panel
+        chart_text = "\n".join(chart_lines)
+        console.print(Panel(
+            chart_text,
+            title="📈 전체 수익률 추이 (30일)",
+            border_style="cyan",
+            subtitle="[dim]※ 시뮬레이션 데이터 (TODO: 실제 거래 내역 연동)[/dim]"
+        ))
+
     def _render_holdings_bars(self):
         """보유 종목 + 수익률 막대 그래프"""
         position_risks, warnings = self.risk_manager.check_positions()
@@ -187,6 +317,11 @@ class RichWatchDashboard:
             table.add_column("현재가", justify="right", width=10)
             table.add_column("손익률", justify="right", width=10)
             table.add_column("수익률 그래프", width=40)
+
+            # Calculate totals
+            total_value = 0
+            total_pnl = 0
+            total_pnl_weighted = 0
 
             for pos in position_risks:
                 # Status icon
@@ -222,9 +357,133 @@ class RichWatchDashboard:
                     bar_graph
                 )
 
+                # Accumulate for average
+                position_value = pos.quantity * pos.current_price
+                total_value += position_value
+                total_pnl += (pos.current_price - pos.avg_price) * pos.quantity
+                total_pnl_weighted += pos.unrealized_pnl_pct * position_value
+
+            # Add separator and average row
+            table.add_row("─" * 12, "─" * 8, "─" * 10, "─" * 10, "─" * 10, "─" * 40)
+
+            # Calculate weighted average profit rate
+            avg_pnl_pct = (total_pnl_weighted / total_value) if total_value > 0 else 0
+            avg_pnl_color = "green" if avg_pnl_pct >= 0 else "red"
+            avg_pnl_text = f"[{avg_pnl_color}]{avg_pnl_pct:+.2f}%[/{avg_pnl_color}]"
+
+            # Average bar graph
+            avg_bar_width = 30
+            avg_abs_pct = abs(avg_pnl_pct)
+            avg_bar_len = min(avg_bar_width, int(avg_abs_pct / 10 * avg_bar_width))
+
+            if avg_pnl_pct >= 0:
+                avg_bar_graph = f"[green]{'█' * avg_bar_len}[/green] {avg_pnl_pct:+.2f}%"
+            else:
+                avg_bar_graph = f"[red]{'█' * avg_bar_len}[/red] {avg_pnl_pct:+.2f}%"
+
+            table.add_row(
+                "[bold cyan]📊 평균[/bold cyan]",
+                f"[bold]{len(position_risks)}개[/bold]",
+                "-",
+                f"[bold]₩{total_value:,.0f}[/bold]",
+                f"[bold]{avg_pnl_text}[/bold]",
+                f"[bold]{avg_bar_graph}[/bold]"
+            )
+
             console.print(table)
+
+            # 시간대별 가격 차트 렌더링 (첫 번째 종목만)
+            if position_risks:
+                self._render_price_chart(position_risks[0])
+
         else:
             console.print(Panel("보유 종목 없음", title="📈 HOLDINGS", border_style="yellow"))
+
+    def _render_price_chart(self, position):
+        """
+        시간대별 가격 차트 (트레일링 스톱 시각화)
+
+        Args:
+            position: 종목 포지션 정보
+        """
+        # Get intraday price history (simplified - using mock data for now)
+        # TODO: Fetch real intraday data from DB or API
+
+        buy_price = position.avg_price
+        current_price = position.current_price
+        high_price = max(buy_price, current_price) * 1.05  # Assume 5% gain at peak
+        trailing_stop_price = high_price * 0.98  # 2% trailing stop from peak
+
+        # Determine chart state
+        is_profit = current_price > buy_price
+        is_trailing_active = current_price > buy_price * 1.05  # Trailing ON after 5% gain
+        is_stop_hit = current_price < trailing_stop_price and is_trailing_active
+
+        # Build ASCII chart
+        chart_lines = []
+        chart_lines.append(f"\n[bold cyan]📊 {position.name} 가격 차트 (트레일링 스톱)[/bold cyan]")
+        chart_lines.append("")
+
+        # Price scale
+        price_range = [buy_price, current_price, high_price, trailing_stop_price]
+        max_price = max(price_range)
+        min_price = min(price_range)
+
+        # Chart height
+        chart_height = 12
+        width = 60
+
+        # Build chart from top to bottom
+        for i in range(chart_height, -1, -1):
+            price_level = min_price + (max_price - min_price) * (i / chart_height)
+            line = "│"
+
+            # Price markers
+            if abs(price_level - high_price) < (max_price - min_price) * 0.05:
+                line = f"│ [yellow]★ 고점 {high_price:,.0f}원[/yellow]"
+            elif abs(price_level - trailing_stop_price) < (max_price - min_price) * 0.05 and is_trailing_active:
+                line = f"│ [red]← 손절가 {trailing_stop_price:,.0f}원 (고점-2%)[/red]"
+            elif abs(price_level - current_price) < (max_price - min_price) * 0.05:
+                status = "[green]● 현재가[/green]" if is_profit else "[red]● 현재가[/red]"
+                line = f"│ {status} {current_price:,.0f}원"
+            elif abs(price_level - buy_price) < (max_price - min_price) * 0.05:
+                line = f"│ [cyan]◆ 매수가 {buy_price:,.0f}원[/cyan]"
+            else:
+                # Draw trend line
+                if i == chart_height // 2:
+                    if is_trailing_active:
+                        line = "│         [dim]트레일링 ON (+5% 도달)[/dim]"
+                    else:
+                        line = "│"
+                else:
+                    line = "│"
+
+            chart_lines.append(line)
+
+        # Time axis
+        chart_lines.append("└" + "─" * (width - 2) + "▶ 시간")
+
+        # Legend
+        chart_lines.append("")
+        chart_lines.append("[bold]범례:[/bold]")
+        chart_lines.append("  [yellow]★[/yellow] 고점 (최고가)")
+        chart_lines.append("  [cyan]◆[/cyan] 매수가 (진입가)")
+        chart_lines.append("  [green]●[/green] 현재가 (실시간)")
+        chart_lines.append("  [red]←[/red] 손절가 (트레일링 스톱)")
+
+        # Status
+        if is_stop_hit:
+            chart_lines.append("\n[bold red]🚨 손절가 하회 → [SELL] 신호 발생[/bold red]")
+        elif is_trailing_active:
+            chart_lines.append("\n[bold green]✅ 트레일링 스톱 활성화 (+5% 돌파)[/bold green]")
+        elif is_profit:
+            chart_lines.append("\n[bold yellow]📈 수익 구간 (트레일링 대기)[/bold yellow]")
+        else:
+            chart_lines.append("\n[bold]📊 관망 구간[/bold]")
+
+        # Render chart panel
+        chart_text = "\n".join(chart_lines)
+        console.print(Panel(chart_text, title=f"💹 {position.name} 트레일링 차트", border_style="cyan"))
 
     def _render_recent_signals(self):
         """🎯 최근 AI 시그널 (Recent 5)"""
