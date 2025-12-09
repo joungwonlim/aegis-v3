@@ -84,6 +84,10 @@ class RichWatchDashboard:
         self._render_total_profit_chart()
         console.print()
 
+        # Today's Intraday Profit Chart
+        self._render_today_intraday_chart()
+        console.print()
+
         # Holdings with Bar Charts
         self._render_holdings_bars()
         console.print()
@@ -305,6 +309,193 @@ class RichWatchDashboard:
             subtitle="[dim]※ 시뮬레이션 데이터 (TODO: 실제 거래 내역 연동)[/dim]"
         ))
 
+    def _render_today_intraday_chart(self):
+        """
+        오늘 하루 시간별 수익률 그래프 (09:00~15:30)
+
+        장중 실시간 수익률 변화 추이
+        """
+        # Get current portfolio value
+        portfolio_query = text("""
+            SELECT cash, total_value
+            FROM portfolio_summary
+            LIMIT 1
+        """)
+        portfolio = self.db.execute(portfolio_query).fetchone()
+
+        if not portfolio:
+            return
+
+        total_value = float(portfolio.total_value)
+        initial_capital = 10_000_000
+        current_pnl_pct = ((total_value - initial_capital) / initial_capital * 100) if initial_capital > 0 else 0
+
+        # Current time
+        now = datetime.now()
+        current_hour = now.hour
+        current_minute = now.minute
+
+        # Market hours: 09:00~15:30
+        market_start = 9 * 60  # 09:00 in minutes
+        market_end = 15 * 60 + 30  # 15:30 in minutes
+        current_time_minutes = current_hour * 60 + current_minute
+
+        # Generate intraday profit history (TODO: Replace with real tick data from DB)
+        # Simulate 5-minute intervals: 09:00, 09:05, 09:10, ..., 15:30
+        time_points = []
+        profit_history = []
+
+        # Starting point
+        start_pnl = current_pnl_pct - 0.5  # Assume started 0.5% lower
+
+        for minutes in range(market_start, min(market_end + 1, current_time_minutes + 1), 5):
+            hour = minutes // 60
+            minute = minutes % 60
+            time_str = f"{hour:02d}:{minute:02d}"
+            time_points.append(time_str)
+
+            # Simulate profit progression with volatility
+            progress = (minutes - market_start) / (current_time_minutes - market_start) if current_time_minutes > market_start else 0
+            simulated_pnl = start_pnl + (current_pnl_pct - start_pnl) * progress
+
+            # Add realistic intraday volatility
+            import random
+            volatility = random.uniform(-0.1, 0.1)
+            simulated_pnl += volatility
+
+            profit_history.append(simulated_pnl)
+
+        if len(profit_history) == 0:
+            console.print(Panel(
+                "[yellow]장 시작 전입니다. 09:00 이후 데이터가 표시됩니다.[/yellow]",
+                title="⏰ 오늘 수익률 (시간별)",
+                border_style="yellow"
+            ))
+            return
+
+        # Build ASCII chart
+        chart_lines = []
+        chart_lines.append("")
+
+        # Chart dimensions
+        chart_height = 12
+        chart_width = 80
+
+        # Find min/max for scaling
+        max_pnl = max(profit_history)
+        min_pnl = min(profit_history)
+        pnl_range = max(max_pnl - min_pnl, 0.5)  # Minimum range 0.5%
+
+        # Build chart from top to bottom
+        for i in range(chart_height, -1, -1):
+            pnl_level = min_pnl + pnl_range * (i / chart_height)
+            line_parts = []
+
+            # Y-axis label
+            if abs(pnl_level - max_pnl) < pnl_range * 0.1:
+                line_parts.append(f"│ [green]{max_pnl:+6.2f}%[/green]")
+            elif abs(pnl_level - current_pnl_pct) < pnl_range * 0.1:
+                line_parts.append(f"│ [cyan]{current_pnl_pct:+6.2f}%[/cyan]")
+            elif abs(pnl_level - min_pnl) < pnl_range * 0.1:
+                line_parts.append(f"│ [red]{min_pnl:+6.2f}%[/red]")
+            else:
+                line_parts.append(f"│       ")
+
+            # Plot data points
+            plot_line = " "
+            for idx, pnl in enumerate(profit_history):
+                # Normalize to chart height
+                normalized_pos = (pnl - min_pnl) / pnl_range * chart_height if pnl_range > 0 else 0
+
+                # Check if this point should be plotted on this line
+                if abs(normalized_pos - i) < 0.3:
+                    # Plot point
+                    if idx == len(profit_history) - 1:
+                        # Current point (larger)
+                        plot_line += "[bold cyan]●[/bold cyan]"
+                    elif pnl > start_pnl:
+                        plot_line += "[green]●[/green]"
+                    elif pnl < start_pnl:
+                        plot_line += "[red]●[/red]"
+                    else:
+                        plot_line += "[yellow]●[/yellow]"
+                elif abs(normalized_pos - i) < 0.8:
+                    # Draw connecting line
+                    if pnl > start_pnl:
+                        plot_line += "[green]│[/green]"
+                    elif pnl < start_pnl:
+                        plot_line += "[red]│[/red]"
+                    else:
+                        plot_line += "[yellow]│[/yellow]"
+                else:
+                    # Empty space
+                    plot_line += " "
+
+            line_parts.append(plot_line)
+            chart_lines.append("".join(line_parts))
+
+        # Time axis with markers
+        time_markers = "└" + "─" * 7
+        marker_interval = len(profit_history) // 4 if len(profit_history) > 0 else 1
+
+        for idx in range(len(profit_history)):
+            if idx % marker_interval == 0 or idx == len(profit_history) - 1:
+                time_markers += "┬" + "─" * (marker_interval - 1)
+            else:
+                time_markers += "─"
+
+        time_markers += "▶"
+        chart_lines.append(time_markers)
+
+        # Time labels
+        time_labels = "        "
+        for idx in range(0, len(time_points), max(len(time_points) // 4, 1)):
+            time_labels += f"{time_points[idx]:^{marker_interval + 1}}"
+
+        # Add current time at the end
+        if len(time_points) > 0:
+            padding = chart_width - len(time_labels) - len(time_points[-1]) - 2
+            time_labels += " " * max(0, padding) + f"[bold cyan]{time_points[-1]}[/bold cyan]"
+
+        chart_lines.append(time_labels)
+
+        # Stats
+        chart_lines.append("")
+        open_pnl = profit_history[0]
+        high_pnl = max(profit_history)
+        low_pnl = min(profit_history)
+        close_pnl = profit_history[-1]
+
+        chart_lines.append(f"[bold]장 시작: [cyan]{open_pnl:+.2f}%[/cyan]  |  "
+                          f"고점: [green]{high_pnl:+.2f}%[/green]  |  "
+                          f"저점: [red]{low_pnl:+.2f}%[/red]  |  "
+                          f"현재: [cyan]{close_pnl:+.2f}%[/cyan][/bold]")
+
+        # Intraday change
+        intraday_change = close_pnl - open_pnl
+        change_color = "green" if intraday_change >= 0 else "red"
+        chart_lines.append(f"[{change_color}]오늘 변화: {intraday_change:+.2f}% "
+                          f"({'상승' if intraday_change >= 0 else '하락'})[/{change_color}]")
+
+        # Market status
+        if current_time_minutes < market_start:
+            status = "[yellow]장 시작 전[/yellow]"
+        elif current_time_minutes > market_end:
+            status = "[blue]장 마감[/blue]"
+        else:
+            status = "[green]장중 거래[/green]"
+
+        chart_lines.append(f"상태: {status}")
+
+        # Render chart panel
+        chart_text = "\n".join(chart_lines)
+        console.print(Panel(
+            chart_text,
+            title=f"⏰ 오늘 수익률 (시간별) - {now.strftime('%Y-%m-%d')}",
+            border_style="magenta",
+            subtitle="[dim]※ 5분 간격 시뮬레이션 (TODO: 실제 틱 데이터 연동)[/dim]"
+        ))
+
     def _render_holdings_bars(self):
         """보유 종목 + 수익률 막대 그래프"""
         position_risks, warnings = self.risk_manager.check_positions()
@@ -391,10 +582,6 @@ class RichWatchDashboard:
             )
 
             console.print(table)
-
-            # 시간대별 가격 차트 렌더링 (첫 번째 종목만)
-            if position_risks:
-                self._render_price_chart(position_risks[0])
 
         else:
             console.print(Panel("보유 종목 없음", title="📈 HOLDINGS", border_style="yellow"))

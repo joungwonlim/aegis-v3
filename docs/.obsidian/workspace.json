@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "MICRO_OPTIMIZATION.md",
+                "file": "CORE_PHILOSOPHY.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "MICRO_OPTIMIZATION"
+              "title": "CORE_PHILOSOPHY"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "MICRO_OPTIMIZATION.md",
+                "file": "CORE_PHILOSOPHY.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "MICRO_OPTIMIZATION 의 백링크"
+              "title": "CORE_PHILOSOPHY 의 백링크"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "MICRO_OPTIMIZATION.md",
+                "file": "CORE_PHILOSOPHY.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "MICRO_OPTIMIZATION 의 나가는 링크"
+              "title": "CORE_PHILOSOPHY 의 나가는 링크"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "MICRO_OPTIMIZATION.md",
+                "file": "CORE_PHILOSOPHY.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "MICRO_OPTIMIZATION 의 개요"
+              "title": "CORE_PHILOSOPHY 의 개요"
             }
           }
         ]
@@ -185,23 +185,25 @@
   },
   "active": "14ea28a33482204f",
   "lastOpenFiles": [
+    "DATA_FLOW.md",
+    "DATA_INTEGRITY_RULES.md",
+    "DATABASE_DESIGN.md",
+    "DEVELOPMENT_PLAN.md",
+    "EXTERNAL_DATA_SOURCES.md",
+    "HYBRID_SYNC_STRATEGY.md",
+    "IMPROVEMENT_PLAN.md",
+    "KIS_API_SPECIFICATION.md",
+    "KIS_WEBSOCKET_GUIDE.md",
+    "MICRO_OPTIMIZATION.md",
     "PYRAMIDING_STRATEGY.md",
     "BACKEND_MICRO_OPT.md",
     "BACKTESTER_SIMPLE.md",
     "BRAIN_SIMPLE.md",
-    "HYBRID_SYNC_STRATEGY.md",
     "KIS_INTEGRATION.md",
-    "DATABASE_DESIGN.md",
-    "DATA_INTEGRITY_RULES.md",
-    "DATA_FLOW.md",
     "SCHEDULER_DESIGN.md",
     "dev/26-KIS-WEBSOCKET-SETUP.md",
     "dev/25-STRATEGY-INTEGRATION.md",
     "dev/24-KOREAN-TRAP-SYSTEM-COMPLETION.md",
-    "DEVELOPMENT_PLAN.md",
-    "EXTERNAL_DATA_SOURCES.md",
-    "IMPROVEMENT_PLAN.md",
-    "MICRO_OPTIMIZATION.md",
     "TRADING_TECHNIQUES.md",
     "SAFETY_SYSTEM.md",
     "클로드_토큰절약.md",
@@ -209,8 +211,6 @@
     "dev/22-KOREAN-MARKET-TRAPS.md",
     "dev/21-PARTIAL-SELL.md",
     "dev/20-SAFETY-CHECKER.md",
-    "dev/19-AI-MODELS-SPECIFICATION.md",
-    "dev/17-IMMEDIATE-EXECUTION-FLOW.md",
     "dev"
   ]
 }
