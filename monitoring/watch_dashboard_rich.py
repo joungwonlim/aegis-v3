@@ -185,7 +185,7 @@ class RichWatchDashboard:
 
     def _render_total_profit_chart(self):
         """
-        전체 수익률 시간대별 그래프
+        전체 수익률 시간대별 그래프 (+/- 추이 표현)
 
         시뮬레이션: 시작자본 대비 현재까지의 수익률 추이
         """
@@ -290,10 +290,17 @@ class RichWatchDashboard:
         chart_lines.append(time_axis)
         chart_lines.append(f"       [dim]D-30          D-20          D-10          TODAY[/dim]")
 
-        # Current status
+        # Current status with trend indicator
         chart_lines.append("")
+
+        # Calculate trend (comparing first vs last 5 days average)
+        first_5_avg = sum(profit_history[:5]) / 5 if len(profit_history) >= 5 else profit_history[0]
+        last_5_avg = sum(profit_history[-5:]) / 5 if len(profit_history) >= 5 else profit_history[-1]
+        is_uptrend = last_5_avg > first_5_avg
+        trend_icon = "↗" if is_uptrend else "↘"
+
         status_color = "green" if current_pnl_pct >= 0 else "red"
-        chart_lines.append(f"[bold {status_color}]현재 수익률: {current_pnl_pct:+.2f}% (₩{total_value:,.0f})[/bold {status_color}]")
+        chart_lines.append(f"[bold {status_color}]{trend_icon} 현재 수익률: {current_pnl_pct:+.2f}% (₩{total_value:,.0f})[/bold {status_color}]")
 
         # Peak info
         peak_pnl = max(profit_history)
@@ -471,10 +478,11 @@ class RichWatchDashboard:
                           f"저점: [red]{low_pnl:+.2f}%[/red]  |  "
                           f"현재: [cyan]{close_pnl:+.2f}%[/cyan][/bold]")
 
-        # Intraday change
+        # Intraday change with trend indicator
         intraday_change = close_pnl - open_pnl
         change_color = "green" if intraday_change >= 0 else "red"
-        chart_lines.append(f"[{change_color}]오늘 변화: {intraday_change:+.2f}% "
+        trend_icon = "↗" if intraday_change >= 0 else "↘"
+        chart_lines.append(f"[{change_color}]{trend_icon} 오늘 변화: {intraday_change:+.2f}% "
                           f"({'상승' if intraday_change >= 0 else '하락'})[/{change_color}]")
 
         # Market status
